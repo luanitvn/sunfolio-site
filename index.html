@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sunfolio · PDF Reader & Docs, private and offline</title>
+<meta name="description" content="Sunfolio reads PDF, Word, text files and images on your Android phone, with free PDF tools: scan, merge, split, compress, organize pages and lock with a password. No account, no upload.">
+<meta name="theme-color" content="#36A9F7">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Sky & Sun, the app's own tokens: Mist page, Sky brand, Sun for joy, Navy ink. Text on Sky is always Navy. */
+  :root {
+    --mist: #F3F8FD; --surface: #FFFFFF; --raised: #FFFFFF; --sunken: #E6EFF8;
+    --ink: #0A2540; --ink2: #4A5B70; --ink3: #5F7088; --line: #D5E2EF;
+    --sky: #36A9F7; --sky-soft: #DCEFFE; --sky-strong: #0B6FB8;
+    --sun: #FFC83D; --sun-soft: #FFF3D1; --navy: #0A2540; --danger: #B3261E;
+    --display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+    --sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --wrap: 1120px; --r-lg: 28px; --r-md: 20px; --r-sm: 14px;
+    --ease: cubic-bezier(0.2, 0, 0, 1); --overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --mist: #0E1626; --surface: #16223A; --raised: #1E2B45; --sunken: #111C30; --ink: #EAF2FB; --ink2: #A9BBD0;
+            --ink3: #8EA0BC; --line: #24324D; --sky-soft: #15324F; --sky-strong: #7CC6FA; --sun-soft: #3A3115; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--mist); color: var(--ink); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+  img, svg { display: block; max-width: 100%; }
+  a { color: var(--sky-strong); }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; border-radius: 8px; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-left, 0px)); }
+  .eyebrow { font: 800 13px/1 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--sky-strong); }
+  .lead { font-size: 19px; color: var(--ink2); max-width: 34em; }
+  section { padding: 88px 0; }
+  .section-head { display: grid; gap: 12px; margin-bottom: 40px; max-width: 760px; }
+  .section-head h2 { font-size: clamp(30px, 4.2vw, 44px); }
+
+  /* Header */
+  header.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--mist) 86%, transparent); backdrop-filter: blur(12px);
+               border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 800 21px/1 var(--display); }
+  .brand svg { width: 36px; height: 36px; }
+  nav.links { display: flex; gap: 22px; align-items: center; }
+  nav.links a { color: var(--ink2); text-decoration: none; font-weight: 600; font-size: 15px; }
+  nav.links a:hover { color: var(--ink); }
+  @media (max-width: 720px) { nav.links a.opt { display: none; } }
+
+  /* Buttons and badges */
+  .store { display: inline-flex; align-items: center; gap: 12px; background: var(--navy); color: #F3F8FD; border-radius: 999px;
+           padding: 12px 22px 12px 16px; text-decoration: none; font-weight: 700; }
+  .store small { display: block; font-weight: 500; font-size: 12px; opacity: .8; }
+  .store .play { width: 26px; height: 26px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+          padding: 6px 12px; font-size: 14px; font-weight: 600; color: var(--ink2); }
+  .chip svg { width: 16px; height: 16px; color: var(--sky-strong); }
+
+  /* Hero */
+  .hero { padding: 56px 0 72px; overflow: hidden; }
+  .hero .wrap { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: clamp(42px, 6.2vw, 72px); margin: 14px 0 18px; }
+  .hero h1 em { font-style: normal; background: linear-gradient(transparent 62%, var(--sun) 62% 92%, transparent 92%); }
+  .hero .cta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 28px 0 22px; }
+  .hero .note { color: var(--ink3); font-size: 14px; }
+  @media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; } .stage { order: -1; } }
+
+  /* Phone illustration: the app's Home, drawn, not a screenshot */
+  .stage { position: relative; display: grid; place-items: center; min-height: 600px; }
+  .sunball { position: absolute; width: 360px; height: 360px; border-radius: 50%; background: var(--sun); right: -40px; top: 40px; opacity: .9;
+             animation: float 6s ease-in-out infinite; }
+  .phone { position: relative; width: 300px; height: 600px; border-radius: 44px; background: var(--navy); padding: 12px;
+           box-shadow: 0 30px 60px rgba(10,37,64,.28); animation: lift 1s var(--ease) both; }
+  .screen { position: relative; height: 100%; border-radius: 34px; background: #F3F8FD; overflow: hidden; color: #0A2540; }
+  .screen .status { height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font: 700 12px/1 var(--sans); }
+  .screen .hello { padding: 6px 18px 0; }
+  .screen .hello span { font-size: 11px; color: #4A5B70; }
+  .screen .hello b { display: block; font: 800 20px/1.2 var(--display); }
+  .cont { margin: 12px 14px 0; height: 128px; border-radius: 22px; background: #36A9F7; position: relative; overflow: hidden; padding: 14px; }
+  .cont small { font: 800 9px/1 var(--sans); letter-spacing: .1em; }
+  .cont b { display: block; font: 800 15px/1.2 var(--sans); margin-top: 6px; }
+  .cont .bar { margin-top: 10px; width: 120px; height: 6px; border-radius: 3px; background: rgba(10,37,64,.18); overflow: hidden; }
+  .cont .bar i { display: block; height: 100%; width: 40%; background: #0A2540; animation: read 4s var(--ease) infinite alternate; }
+  .cont .btn { position: absolute; left: 14px; bottom: 14px; background: #0A2540; color: #F3F8FD; border-radius: 999px; padding: 6px 14px; font: 700 11px/1 var(--sans); }
+  .cont .ball { position: absolute; right: -30px; bottom: -40px; width: 120px; height: 120px; border-radius: 50%; background: #FFC83D; }
+  .cont .page { position: absolute; right: 18px; top: 14px; width: 52px; height: 66px; background: #fff; border-radius: 8px; transform: rotate(8deg);
+                box-shadow: 0 6px 14px rgba(10,37,64,.2); animation: bob 3s ease-in-out infinite; }
+  .cont .page i { display: block; height: 4px; margin: 8px 8px 0; border-radius: 2px; background: #0A2540; }
+  .cont .page i + i { width: 60%; background: #D5E2EF; }
+  .label { padding: 16px 18px 8px; font: 800 13px/1 var(--sans); }
+  .rows { display: grid; gap: 8px; padding: 0 14px; }
+  .row { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 9px 10px; box-shadow: 0 1px 2px rgba(10,37,64,.06);
+         animation: rise .6s var(--ease) both; }
+  .row:nth-child(2) { animation-delay: .1s; } .row:nth-child(3) { animation-delay: .2s; } .row:nth-child(4) { animation-delay: .3s; }
+  .row .fmt { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font: 800 8px/1 var(--sans); }
+  .row .fmt.pdf { background: #FDE7E5; color: #B3261E; } .row .fmt.doc { background: #E3EDFF; color: #2457C5; }
+  .row .fmt.img { background: #DFF5F2; color: #1A7F72; } .row .fmt.txt { background: #EDF0F4; color: #4A5B70; }
+  .row b { font: 700 11px/1.2 var(--sans); } .row small { display: block; font-size: 9px; color: #5F7088; }
+  /* The floating Dock: a Sun ring travels between tabs, as in the app (Motion M7) */
+  .dock { position: absolute; left: 10px; right: 10px; bottom: 12px; height: 58px; border-radius: 18px; background: #0A2540;
+          display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
+  .dock span { display: grid; place-items: center; color: #A9BBD0; }
+  .dock span svg { width: 18px; height: 18px; }
+  .dock .ring { position: absolute; top: -20px; left: 0; width: 25%; display: grid; place-items: center; }
+  .dock .ring i { width: 44px; height: 44px; border-radius: 50%; background: #FFC83D; box-shadow: 0 0 0 6px #F3F8FD; display: grid; place-items: center; color: #0A2540;
+                  animation: breathe 3s ease-in-out infinite; }
+  .dock .ring i svg { width: 20px; height: 20px; }
+  .dock .home-label { position: absolute; left: 0; width: 25%; bottom: 7px; text-align: center; font: 700 9px/1 var(--sans); color: #FFC83D; }
+  .fly { position: absolute; width: 74px; height: 92px; border-radius: 12px; background: #fff; box-shadow: 0 14px 30px rgba(10,37,64,.18);
+         display: grid; place-items: center; font: 800 12px/1 var(--sans); color: #fff; }
+  .fly b { padding: 5px 9px; border-radius: 8px; }
+  .fly.f1 { left: 0; top: 120px; transform: rotate(-10deg); animation: drift 7s ease-in-out infinite; }
+  .fly.f1 b { background: #D9493E; }
+  .fly.f2 { right: 10px; bottom: 90px; transform: rotate(9deg); animation: drift 8s ease-in-out -2s infinite; }
+  .fly.f2 b { background: #2F6BE0; }
+  .fly.f3 { left: 30px; bottom: 40px; transform: rotate(6deg); animation: drift 9s ease-in-out -4s infinite; }
+  .fly.f3 b { background: #1A9A88; }
+
+  /* Steps */
+  .steps .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: s; }
+  .step { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px; position: relative; }
+  .step::before { counter-increment: s; content: counter(s); position: absolute; top: 22px; right: 22px; width: 34px; height: 34px; border-radius: 50%;
+                  background: var(--sun); color: #0A2540; display: grid; place-items: center; font: 800 15px/1 var(--display); }
+  .step h3 { font-size: 21px; margin: 18px 0 8px; } .step p { color: var(--ink2); font-size: 16px; }
+  .step .ico { width: 56px; height: 56px; border-radius: 18px; background: var(--sky-soft); color: var(--sky-strong); display: grid; place-items: center; }
+  .step .ico svg { width: 28px; height: 28px; }
+  @media (max-width: 860px) { .steps .grid { grid-template-columns: 1fr; } }
+
+  /* Reader: the page cycles through Light, Sepia and Night */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+  .ticks { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 12px; }
+  .ticks li { display: flex; gap: 12px; align-items: flex-start; color: var(--ink2); }
+  .ticks li::before { content: ""; flex: none; width: 22px; height: 22px; margin-top: 2px; border-radius: 50%; background: var(--sky-soft)
+                      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B6FB8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/14px no-repeat; }
+  .reader { position: relative; height: 420px; display: grid; place-items: center; }
+  .sheet { width: 300px; height: 380px; border-radius: 10px; padding: 28px 26px; box-shadow: 0 24px 50px rgba(10,37,64,.2); animation: modes 9s steps(1) infinite; }
+  .sheet b { display: block; height: 14px; width: 60%; border-radius: 4px; background: currentColor; margin-bottom: 18px; }
+  .sheet i { display: block; height: 7px; border-radius: 4px; background: currentColor; opacity: .35; margin: 11px 0; }
+  .sheet i:nth-child(3n) { width: 78%; } .sheet .hit { background: var(--sun); opacity: 1; width: 34%; }
+  .modes { position: absolute; bottom: 0; display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px; }
+  .modes span { padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 13px; color: var(--ink2); }
+  .modes span:nth-child(1) { animation: m1 9s steps(1) infinite; } .modes span:nth-child(2) { animation: m2 9s steps(1) infinite; } .modes span:nth-child(3) { animation: m3 9s steps(1) infinite; }
+
+  /* Tools */
+  .tools { background: var(--navy); color: #EAF2FB; border-radius: 44px; margin: 0 12px; }
+  .tools .eyebrow { color: var(--sun); } .tools .lead { color: #A9BBD0; }
+  .tgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .tgrid { grid-template-columns: repeat(2, 1fr); } }
+  .tool { background: #13304F; border: 1px solid #1F426A; border-radius: var(--r-md); padding: 20px; min-height: 196px; display: grid; align-content: space-between; }
+  .tool h3 { font: 700 18px/1.2 var(--sans); margin-top: 18px; } .tool p { color: #A9BBD0; font-size: 14px; margin-top: 6px; }
+  .tv { height: 72px; position: relative; }
+  .tv .pg { position: absolute; width: 46px; height: 60px; border-radius: 7px; background: #fff; top: 6px; }
+  .tv .pg::after { content: ""; position: absolute; left: 8px; right: 8px; top: 10px; height: 4px; border-radius: 2px; background: #0A2540;
+                   box-shadow: 0 9px 0 #D5E2EF, 0 18px 0 #D5E2EF, 0 27px 0 #D5E2EF; }
+  .tv.scan .pg { left: 10px; } .tv.scan .beam { position: absolute; left: 4px; width: 58px; height: 3px; border-radius: 2px; background: var(--sun);
+                  box-shadow: 0 0 12px var(--sun); animation: beam 2.4s ease-in-out infinite; }
+  .tv.images .ph { position: absolute; width: 42px; height: 34px; border-radius: 6px; background: linear-gradient(135deg, #36A9F7, #1A9A88); top: 20px; animation: toPdf 3.2s var(--ease) infinite; }
+  .tv.images .ph:nth-child(2) { animation-delay: .25s; left: 18px; } .tv.images .ph:nth-child(3) { animation-delay: .5s; left: 36px; }
+  .tv.images .pg { left: 96px; animation: pop 3.2s var(--overshoot) infinite; }
+  .tv.merge .pg:nth-child(1) { left: 0; animation: mergeL 3s var(--ease) infinite; } .tv.merge .pg:nth-child(2) { left: 90px; animation: mergeR 3s var(--ease) infinite; }
+  .tv.split .pg:nth-child(1) { left: 36px; animation: splitL 3s var(--ease) infinite; } .tv.split .pg:nth-child(2) { left: 52px; top: 10px; animation: splitR 3s var(--ease) infinite; }
+  .tv.compress .pg { left: 10px; transform-origin: bottom left; animation: squeeze 3s var(--ease) infinite; }
+  .tv.compress .tag { position: absolute; left: 70px; top: 22px; background: var(--sun); color: #0A2540; font: 800 12px/1 var(--sans); padding: 6px 9px; border-radius: 8px;
+                      animation: tag 3s var(--ease) infinite; }
+  .tv.pages .pg { animation: spin 3.6s var(--overshoot) infinite; } .tv.pages .pg:nth-child(1) { left: 0; } .tv.pages .pg:nth-child(2) { left: 54px; animation-delay: .3s; }
+  .tv.pages .pg:nth-child(3) { left: 108px; animation-delay: .6s; }
+  .tv.lock svg, .tv.unlock svg { width: 64px; height: 64px; color: var(--sun); }
+  .tv.lock .shackle { animation: shut 2.6s var(--overshoot) infinite; transform-origin: 16px 10px; }
+  .tv.unlock .shackle { animation: open 2.6s var(--overshoot) infinite; transform-origin: 16px 10px; }
+  .free { margin-top: 28px; color: #A9BBD0; font-size: 15px; }
+
+  /* Formats */
+  .fmts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .fmts { grid-template-columns: repeat(2, 1fr); } }
+  .fmt-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 22px; transition: transform .2s var(--overshoot); }
+  .fmt-card:hover { transform: translateY(-4px); }
+  .fmt-card .badge { display: inline-block; font: 800 12px/1 var(--sans); padding: 7px 10px; border-radius: 9px; }
+  .fmt-card h3 { font: 700 19px/1.25 var(--sans); margin: 14px 0 6px; } .fmt-card p { color: var(--ink2); font-size: 15px; }
+
+  /* Privacy */
+  .privacy .card { background: var(--sky); color: #0A2540; border-radius: 44px; padding: 56px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; overflow: hidden; position: relative; }
+  .privacy .card::after { content: ""; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: var(--sun); right: -80px; bottom: -120px; animation: float 7s ease-in-out infinite; }
+  .privacy h2 { font-size: clamp(30px, 4vw, 44px); } .privacy p { margin-top: 14px; font-size: 18px; }
+  .privacy ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; position: relative; z-index: 1; }
+  .privacy li { background: rgba(255,255,255,.9); border-radius: 16px; padding: 14px 16px; font-weight: 600; display: flex; gap: 10px; align-items: center; }
+  .privacy li svg { flex: none; width: 22px; height: 22px; color: #0B6FB8; }
+  .privacy a { color: #0A2540; font-weight: 700; }
+  @media (max-width: 860px) { .privacy .card { grid-template-columns: 1fr; padding: 36px 26px; } }
+
+  /* Limits and FAQ */
+  .limits .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 760px) { .limits .grid { grid-template-columns: 1fr; } }
+  .limit { border: 1px dashed var(--line); border-radius: var(--r-md); padding: 20px 22px; color: var(--ink2); }
+  .limit b { color: var(--ink); display: block; margin-bottom: 4px; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 4px 22px; margin-bottom: 12px; }
+  summary { cursor: pointer; font-weight: 700; padding: 16px 0; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font: 700 22px/1 var(--sans); color: var(--sky-strong); transition: transform .2s var(--ease); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { color: var(--ink2); padding: 0 0 18px; }
+  footer { padding: 40px 0 56px; color: var(--ink3); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 28px; justify-content: space-between; align-items: center; }
+  footer nav { display: flex; gap: 20px; } footer a { color: var(--ink2); }
+
+  /* Scroll reveal where the browser supports it; everything stays visible otherwise */
+  @supports (animation-timeline: view()) {
+    .reveal { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+  }
+
+  @keyframes float { 50% { transform: translateY(-14px); } }
+  @keyframes bob { 50% { transform: rotate(8deg) translateY(-5px); } }
+  @keyframes drift { 50% { translate: 0 -12px; } }
+  @keyframes lift { from { opacity: 0; transform: translateY(40px) scale(.96); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+  @keyframes read { to { width: 86%; } }
+  @keyframes breathe { 50% { transform: translateY(-3px); } }
+  @keyframes modes { 0% { background: #FFFFFF; color: #0A2540; } 33.3% { background: #F6EBD7; color: #4A3A22; } 66.6% { background: #121A2B; color: #DDE6F2; } }
+  @keyframes m1 { 0% { background: var(--sky); color: #0A2540; } 33.3% { background: none; color: var(--ink2); } }
+  @keyframes m2 { 0% { background: none; color: var(--ink2); } 33.3% { background: var(--sky); color: #0A2540; } 66.6% { background: none; color: var(--ink2); } }
+  @keyframes m3 { 0% { background: none; color: var(--ink2); } 66.6% { background: var(--sky); color: #0A2540; } }
+  @keyframes beam { 0%, 100% { top: 6px; } 50% { top: 62px; } }
+  @keyframes toPdf { 0% { transform: none; opacity: 1; } 55%, 100% { transform: translateX(70px) scale(.4); opacity: 0; } }
+  @keyframes pop { 0%, 45% { transform: scale(.6); opacity: 0; } 70%, 100% { transform: none; opacity: 1; } }
+  @keyframes mergeL { 0%, 15% { transform: none; } 55%, 85% { transform: translateX(45px); } 100% { transform: none; } }
+  @keyframes mergeR { 0%, 15% { transform: none; } 55%, 85% { transform: translateX(-45px) rotate(4deg); } 100% { transform: none; } }
+  @keyframes splitL { 0%, 15% { transform: none; } 55%, 85% { transform: translateX(-42px) rotate(-6deg); } 100% { transform: none; } }
+  @keyframes splitR { 0%, 15% { transform: none; } 55%, 85% { transform: translateX(42px) rotate(6deg); } 100% { transform: none; } }
+  @keyframes squeeze { 0%, 15% { transform: none; } 55%, 85% { transform: scale(.62); } 100% { transform: none; } }
+  @keyframes tag { 0%, 40% { opacity: 0; transform: translateY(6px); } 60%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+  @keyframes spin { 0%, 20% { transform: none; } 45%, 80% { transform: rotate(90deg) scale(.86); } 100% { transform: none; } }
+  @keyframes shut { 0%, 25% { transform: translateY(-5px); } 50%, 100% { transform: none; } }
+  @keyframes open { 0%, 25% { transform: none; } 50%, 100% { transform: translateY(-5px) rotate(-18deg); } }
+
+  /* Dark: the store badge and the phone need their own edge; the highlight softens under white text */
+  @media (prefers-color-scheme: dark) {
+    .store { background: var(--sky); color: #0A2540; }
+    .hero h1 em { background: linear-gradient(transparent 66%, rgba(255,200,61,.45) 66% 92%, transparent 92%); }
+    .phone { box-shadow: 0 0 0 1px #24324D, 0 30px 60px rgba(0,0,0,.5); }
+  }
+  /* Small phones: tool drawings scale down to fit their tile, the floating pages step aside */
+  @media (max-width: 560px) {
+    .tv { transform: scale(.78); transform-origin: left top; }
+    .fly { display: none; }
+    .stage { min-height: 560px; }
+  }
+
+  /* Reduce motion: no movement at all, only the settled state */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    .sheet { background: #fff; color: #0A2540; } .modes span:nth-child(1) { background: var(--sky); color: #0A2540; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Sunfolio home">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#36A9F7"/><g transform="translate(256 256) scale(1.06) translate(-256 -256)"><g transform="rotate(-8 256 256)"><path d="M172 96H340Q376 96 376 132V270L248 416H172Q136 416 136 380V132Q136 96 172 96Z" fill="#FFFFFF"/><path d="M376 270L248 416Q268 296 376 270Z" fill="#FFC83D"/><rect x="176" y="152" width="150" height="26" rx="13" fill="#0A2540"/><rect x="176" y="200" width="112" height="26" rx="13" fill="#0A2540"/><rect x="176" y="248" width="70" height="26" rx="13" fill="#36A9F7"/></g></g></svg>
+      Sunfolio
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a class="opt" href="#reader">Reader</a>
+      <a class="opt" href="#tools">PDF tools</a>
+      <a class="opt" href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">PDF Reader · Sunfolio Docs</p>
+      <h1>Every document on your phone, <em>open in a tap.</em></h1>
+      <p class="lead">Sunfolio finds your PDF, Word, text files and images, opens them fast, and gives you free PDF tools. Everything happens on your phone: no account, no upload.</p>
+      <div class="cta">
+        <span class="store" aria-label="Coming soon on Google Play">
+          <svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path fill="#36A9F7" d="M3.6 2.3 13.4 12l-9.8 9.7c-.4-.2-.6-.6-.6-1.1V3.4c0-.5.2-.9.6-1.1z"/><path fill="#FFC83D" d="m16.8 8.6-3.4 3.4-9.8-9.7 12.5 6.1z"/><path fill="#F3F8FD" d="M3.6 21.7 13.4 12l3.4 3.4z"/><path fill="#FFC83D" d="M20.4 10.5c.8.4.8 1.6 0 2l-3.6 2.9-3.4-3.4 3.4-3.4z" opacity=".7"/></svg>
+          <span><small>Coming soon on</small>Google Play</span>
+        </span>
+      </div>
+      <div class="chips" role="list">
+        <span class="chip" role="listitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>Free</span>
+        <span class="chip" role="listitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>Works offline</span>
+        <span class="chip" role="listitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>No account</span>
+        <span class="chip" role="listitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>No ads in this version</span>
+      </div>
+    </div>
+
+    <div class="stage" aria-hidden="true">
+      <div class="sunball"></div>
+      <div class="fly f1"><b>PDF</b></div>
+      <div class="fly f2"><b>DOC</b></div>
+      <div class="fly f3"><b>IMG</b></div>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="hello"><span>Monday, November 2</span><b>Good morning</b></div>
+          <div class="cont">
+            <small>CONTINUE READING</small>
+            <b>Lease agreement.pdf</b>
+            <div class="bar"><i></i></div>
+            <span class="btn">Continue</span>
+            <div class="ball"></div>
+            <div class="page"><i></i><i></i><i></i></div>
+          </div>
+          <div class="label">Recent</div>
+          <div class="rows">
+            <div class="row"><span class="fmt pdf">PDF</span><span><b>Q3 report.pdf</b><small>2 min ago</small></span></div>
+            <div class="row"><span class="fmt doc">DOC</span><span><b>Meeting notes.docx</b><small>Yesterday</small></span></div>
+            <div class="row"><span class="fmt img">IMG</span><span><b>Receipt.jpg</b><small>Oct 30</small></span></div>
+            <div class="row"><span class="fmt txt">TXT</span><span><b>Packing list.txt</b><small>Oct 28</small></span></div>
+          </div>
+          <div class="dock">
+            <div class="ring"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg></i></div><span class="home-label">Home</span>
+            <span></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="steps">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>Your documents, sorted before you ask.</h2>
+    </div>
+    <div class="grid">
+      <div class="step reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 7.6-1.8"/></svg></div>
+        <h3>Let it look</h3>
+        <p>Allow access once and Sunfolio finds every PDF, Word, text and image file on your phone. Prefer to pick folders yourself? That works too.</p>
+      </div>
+      <div class="step reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></div>
+        <h3>Find it fast</h3>
+        <p>Files are grouped by type, with Recent and Favorites. Search names without typing accents, sort by name, date or size.</p>
+      </div>
+      <div class="step reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M9.5 12h5M9.5 15.5h5"/></svg></div>
+        <h3>Read, or get it done</h3>
+        <p>Open a large PDF in under a second and pick up where you stopped. Or turn to the PDF tools: scan, merge, split, compress.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="reader">
+  <div class="wrap split">
+    <div class="reveal">
+      <p class="eyebrow">A comfortable reader</p>
+      <h2 style="font-size:clamp(30px,4.2vw,44px);margin-top:12px">Easy on the eyes, day or night.</h2>
+      <ul class="ticks">
+        <li>Smooth scrolling and pinch to zoom, vertically or page by page</li>
+        <li>Search the text, jump to a page, follow the table of contents</li>
+        <li>Light, Sepia and Night reading modes</li>
+        <li>Opens password-protected PDFs and remembers your page</li>
+        <li>Word (.docx) in a clean reading view; text files of any size; photos with zoom</li>
+      </ul>
+    </div>
+    <div class="reader reveal" aria-hidden="true">
+      <div class="sheet"><b></b><i></i><i></i><i class="hit"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="modes"><span>Light</span><span>Sepia</span><span>Night</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="tools" id="tools">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Free PDF tools</p>
+      <h2>Eight tools. No upload, no watermark.</h2>
+      <p class="lead">Every tool runs on your phone and saves a new file in Download/Sunfolio. Your original stays exactly as it was.</p>
+    </div>
+    <div class="tgrid">
+      <div class="tool reveal"><div class="tv scan" aria-hidden="true"><span class="pg"></span><span class="beam"></span></div><div><h3>Scan</h3><p>Paper to a clean PDF: edges found, filters for crisp text.</p></div></div>
+      <div class="tool reveal"><div class="tv images" aria-hidden="true"><span class="ph"></span><span class="ph"></span><span class="ph"></span><span class="pg"></span></div><div><h3>Images to PDF</h3><p>Turn photos into one PDF, in the order you choose.</p></div></div>
+      <div class="tool reveal"><div class="tv merge" aria-hidden="true"><span class="pg"></span><span class="pg"></span></div><div><h3>Merge</h3><p>Join several PDFs into one, in seconds.</p></div></div>
+      <div class="tool reveal"><div class="tv split" aria-hidden="true"><span class="pg"></span><span class="pg"></span></div><div><h3>Split</h3><p>Pull out page ranges, or every page as its own file.</p></div></div>
+      <div class="tool reveal"><div class="tv compress" aria-hidden="true"><span class="pg"></span><span class="tag">−46%</span></div><div><h3>Compress</h3><p>Shrink big PDFs so they are easier to send.</p></div></div>
+      <div class="tool reveal"><div class="tv pages" aria-hidden="true"><span class="pg"></span><span class="pg"></span><span class="pg"></span></div><div><h3>Organize pages</h3><p>Rotate, reorder, delete, or extract the pages you pick.</p></div></div>
+      <div class="tool reveal"><div class="tv lock" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="14" width="18" height="13" rx="3.5"/><path class="shackle" d="M11 14v-3.5a5 5 0 0 1 10 0V14"/></svg></div><div><h3>Lock with a password</h3><p>Protect a PDF with strong AES-256 encryption.</p></div></div>
+      <div class="tool reveal"><div class="tv unlock" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="14" width="18" height="13" rx="3.5"/><path class="shackle" d="M11 14v-3.5a5 5 0 0 1 10 0V14"/></svg></div><div><h3>Remove a password</h3><p>Save a copy that opens without one, when you know it.</p></div></div>
+    </div>
+    <p class="free reveal">All free in this version. A PDF's print and copy limits set by its author stay in place.</p>
+  </div>
+</section>
+
+<section id="formats">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Formats</p>
+      <h2>The files you actually get.</h2>
+    </div>
+    <div class="fmts">
+      <div class="fmt-card reveal"><span class="badge" style="background:#FDE7E5;color:#B3261E">PDF</span><h3>PDF</h3><p>Large files, password-protected files, scanned pages.</p></div>
+      <div class="fmt-card reveal"><span class="badge" style="background:#E3EDFF;color:#2457C5">DOCX</span><h3>Word</h3><p>A clean reading view with tables, lists and pictures.</p></div>
+      <div class="fmt-card reveal"><span class="badge" style="background:#EDF0F4;color:#4A5B70">TXT</span><h3>Text</h3><p>Text files of any size, with adjustable text size.</p></div>
+      <div class="fmt-card reveal"><span class="badge" style="background:#DFF5F2;color:#1A7F72">IMG</span><h3>Images</h3><p>Photos and scans, with zoom.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="privacy" id="privacy">
+  <div class="wrap">
+    <div class="card reveal">
+      <div>
+        <p class="eyebrow" style="color:#0A2540">Private by design</p>
+        <h2 style="margin-top:12px">Your documents never leave your phone.</h2>
+        <p>Sunfolio has no server and no account. It sends anonymous crash reports and usage counts, never file names, folders or what is inside your documents. <a href="privacy">Read the privacy policy</a>.</p>
+      </div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>Works offline</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>No sign-up, no cloud</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>Tools never upload a file</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>No advertising ID</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="limits">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Good to know</p>
+      <h2>What this first version doesn't do yet.</h2>
+    </div>
+    <div class="grid">
+      <div class="limit reveal"><b>Word files show in a reading view</b>So the layout can differ from the original. Older .doc files open with another app.</div>
+      <div class="limit reveal"><b>Excel and PowerPoint open with another app</b>Sunfolio lists them so you can find them, and hands them to a viewer you have.</div>
+      <div class="limit reveal"><b>Scanning needs Google Play services</b>The scanner is Google's, run by Play services on your phone. Sunfolio itself has no camera permission.</div>
+      <div class="limit reveal"><b>No signing, notes or text recognition yet</b>Those come later. This version is about reading well and the eight tools above.</div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="section-head reveal"><p class="eyebrow">Questions</p><h2>Asked before you ask.</h2></div>
+    <details><summary>Is Sunfolio free?</summary><p>Yes. This version is free, with no ads and no in-app purchases. Every PDF tool is free too.</p></details>
+    <details><summary>Why does it ask for access to all files?</summary><p>So it can find every document on your phone and list it for you; Android only gives document files from other apps to apps with this access. You can say no: Sunfolio then works with the folders and files you pick.</p></details>
+    <details><summary>Are my files uploaded anywhere?</summary><p>No. Reading and every tool happen on your phone. The only things sent are anonymous crash reports and usage counts, without names or content.</p></details>
+    <details><summary>Does a tool change my original file?</summary><p>Never. Each tool saves a new file in Download/Sunfolio, so your original stays as it was.</p></details>
+    <details><summary>Which Android versions are supported?</summary><p>Android 8.0 and newer.</p></details>
+    <details><summary>How do I contact you?</summary><p>Write to <a href="mailto:luan91.official@gmail.com">luan91.official@gmail.com</a>, or use Send feedback in the app's Settings.</p></details>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 JC Studio · Sunfolio</span>
+    <nav aria-label="Legal"><a href="privacy">Privacy policy</a><a href="terms">Terms of use</a><a href="mailto:luan91.official@gmail.com">Contact</a></nav>
+  </div>
+</footer>
+</body>
+</html>
